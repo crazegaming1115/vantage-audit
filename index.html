@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Free OSINT Self-Audit — what does the internet know about you? | Vantage Recon</title>
+<meta name="description" content="Free, private, in-browser self-audit. Enter a username and instantly see your public footprint across 60+ sites + exposure searches. Runs 100% in your browser — nothing is sent anywhere. By Vantage Recon." />
+<meta property="og:title" content="Free OSINT Self-Audit — what's public about you?" />
+<meta property="og:description" content="Type a username, see your public footprint in seconds. 100% in-browser, nothing stored. Authorized self-audit only." />
+<meta property="og:type" content="website" />
+<style>
+  :root{
+    --bg:#070b14; --bg2:#0b1322; --card:#0e1a2e; --line:#1c2c44;
+    --cy:#2bd4ff; --cy2:#1892b8; --txt:#eaf2fb; --dim:#8aa0b8; --red:#ff5470;
+    --mono:"Consolas","SF Mono",Menlo,monospace; --sans:"Segoe UI",system-ui,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.5;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:60px 60px;background-attachment:fixed;}
+  body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% -10%,rgba(43,212,255,.10),transparent 60%);pointer-events:none;}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 18px 80px;position:relative}
+  header{display:flex;align-items:center;gap:12px;justify-content:center;margin:10px 0 26px}
+  header .name{font-weight:800;font-size:22px;letter-spacing:.5px}
+  header .name span{color:var(--cy)}
+  .hero{text-align:center;margin:18px 0 30px}
+  .hero h1{font-size:clamp(30px,6vw,52px);font-weight:800;margin:0 0 12px;line-height:1.1}
+  .hero h1 b{color:var(--cy)}
+  .hero p{color:var(--dim);font-size:clamp(15px,2.5vw,19px);max-width:620px;margin:0 auto}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin:22px 0;box-shadow:0 0 60px rgba(43,212,255,.06)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  label{display:block;font-size:13px;color:var(--dim);margin:0 0 6px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase}
+  input[type=text]{flex:1;min-width:180px;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--txt);
+    font-size:18px;font-family:var(--mono);padding:16px 18px;outline:none}
+  input[type=text]:focus{border-color:var(--cy);box-shadow:0 0 0 3px rgba(43,212,255,.15)}
+  .opt{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .opt input{font-size:15px;padding:12px 14px}
+  button.run{background:var(--cy);color:#04121b;font-weight:800;font-size:18px;border:none;border-radius:12px;
+    padding:16px 28px;cursor:pointer;white-space:nowrap;transition:transform .08s}
+  button.run:hover{transform:translateY(-1px)}
+  .hint{color:var(--dim);font-size:13px;margin-top:12px}
+  .hint b{color:var(--cy)}
+  #results{display:none}
+  .sec-title{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;margin:26px 0 14px}
+  .sec-title .tag{font-family:var(--mono);font-size:12px;color:var(--cy);border:1px solid var(--cy2);border-radius:20px;padding:3px 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  a.site{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;color:var(--txt);text-decoration:none;font-size:14px;transition:border-color .12s,background .12s}
+  a.site:hover{border-color:var(--cy);background:#11203a}
+  a.site .arr{color:var(--cy);font-size:12px}
+  a.site .cat{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:1px}
+  a.dork{display:block;background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--cy);border-radius:10px;
+    padding:12px 14px;color:var(--txt);text-decoration:none;font-size:14px;margin-bottom:8px}
+  a.dork:hover{border-color:var(--cy);background:#11203a}
+  a.dork .q{font-family:var(--mono);color:var(--dim);font-size:12px;display:block;margin-top:3px}
+  .cta{background:linear-gradient(180deg,#0e1a2e,#0b1322);border:1px solid var(--cy2);border-radius:18px;padding:28px;text-align:center;margin:34px 0 0;box-shadow:0 0 80px rgba(43,212,255,.12)}
+  .cta h2{font-size:clamp(22px,4vw,30px);margin:0 0 10px}
+  .cta h2 b{color:var(--cy)}
+  .cta p{color:var(--dim);max-width:560px;margin:0 auto 18px}
+  .cta a.buy{display:inline-block;background:var(--cy);color:#04121b;font-weight:800;font-size:18px;text-decoration:none;border-radius:12px;padding:15px 34px}
+  .cta .price{color:var(--dim);font-size:13px;margin-top:12px;font-family:var(--mono)}
+  .email{margin-top:18px}
+  .email form{display:flex;gap:8px;max-width:420px;margin:8px auto 0;flex-wrap:wrap}
+  .email input{flex:1;min-width:160px}
+  .email button{background:var(--bg2);border:1px solid var(--cy2);color:var(--cy);border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}
+  footer{text-align:center;color:var(--dim);font-size:13px;margin-top:40px;border-top:1px solid var(--line);padding-top:22px}
+  footer .eth{max-width:620px;margin:0 auto 10px;font-size:12px}
+  .pulse{animation:p 1.4s infinite}@keyframes p{50%{opacity:.5}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg width="40" height="40" viewBox="0 0 100 100" style="filter:drop-shadow(0 0 8px var(--cy))">
+      <circle cx="50" cy="50" r="34" fill="none" stroke="#2bd4ff" stroke-width="3"/>
+      <circle cx="50" cy="50" r="22" fill="none" stroke="#2bd4ff" stroke-width="1.5" opacity=".55"/>
+      <line x1="50" y1="3" x2="50" y2="22" stroke="#2bd4ff" stroke-width="3"/><line x1="50" y1="78" x2="50" y2="97" stroke="#2bd4ff" stroke-width="3"/>
+      <line x1="3" y1="50" x2="22" y2="50" stroke="#2bd4ff" stroke-width="3"/><line x1="78" y1="50" x2="97" y2="50" stroke="#2bd4ff" stroke-width="3"/>
+      <path d="M36 36 L50 66 L64 36" fill="none" stroke="#2bd4ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="name">Vantage <span>Recon</span></div>
+  </header>
+
+  <div class="hero">
+    <h1>What does the internet<br>know about <b>you?</b></h1>
+    <p>Type a username and see your public footprint in seconds — across 60+ sites, plus the searches an attacker would run. Free, and it runs <b>entirely in your browser</b> — nothing is sent or stored anywhere.</p>
+  </div>
+
+  <div class="panel">
+    <label for="u">Username / handle to audit</label>
+    <div class="row">
+      <input type="text" id="u" placeholder="e.g. yourhandle" autocomplete="off" spellcheck="false" />
+      <button class="run" id="go">Run self-audit →</button>
+    </div>
+    <div class="opt">
+      <input type="text" id="email" placeholder="optional: an email to search" autocomplete="off" spellcheck="false" />
+      <input type="text" id="name" placeholder="optional: a full name to search" autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="hint">🔒 <b>Private by design:</b> this tool only builds links you can click — it makes no requests with your data. Use it on <b>yourself</b> or someone you're authorized to assess.</div>
+  </div>
+
+  <div id="results">
+    <div class="sec-title">Account footprint <span class="tag" id="siteCount"></span></div>
+    <p style="color:var(--dim);margin:0 0 14px;font-size:14px">Click any site to check if <b id="echo1"></b> has an account there. The ones that load a real profile = part of your public footprint.</p>
+    <div class="grid" id="siteGrid"></div>
+
+    <div class="sec-title">Exposure search <span class="tag">google dorks</span></div>
+    <p style="color:var(--dim);margin:0 0 14px;font-size:14px">The targeted searches that surface leaks, pastes, and documents tied to an identity:</p>
+    <div id="dorkList"></div>
+
+    <div class="cta">
+      <h2>That's <b>2 of 25+ modules.</b> By hand.</h2>
+      <p>The full <b>Vantage Recon</b> desktop app runs all of them on a username, email, domain, or IP — breach exposure, linked accounts, metadata, ports + CVEs, typosquat finder — in <b>one click</b>. No API keys. Runs locally. Authorized research only.</p>
+      <a class="buy" id="buy" href="#" target="_blank" rel="noopener">Get Vantage Recon →</a>
+      <div class="price">$19.99 once · lifetime updates · GUI + CLI</div>
+      <div class="email">
+        <p style="color:var(--dim);font-size:13px;margin:18px 0 0">Or get the free 12-point self-audit checklist by email:</p>
+        <form id="emailForm">
+          <input type="text" id="leadEmail" placeholder="you@email.com" />
+          <button type="submit">Send it</button>
+        </form>
+        <div class="hint" id="emailMsg" style="text-align:center"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="eth">⚖️ <b>Authorized use only.</b> This tool surfaces publicly available information for self-audits and authorized research. It does not bypass logins or access private data. You are responsible for using it lawfully.</div>
+    <div>© Vantage Recon · one-click OSINT, no API keys</div>
+  </footer>
+</div>
+
+<script>
+  /* ===== CONFIG — edit these two lines ===== */
+  const STORE_URL = "https://whop.com/vantage-osint/vantage-osint-lifetime-license";
+  const FORMSPREE_ENDPOINT = ""; // optional: paste a Formspree form URL (https://formspree.io/f/xxxx) to capture emails. Leave "" to disable.
+  /* ========================================= */
+
+  document.getElementById("buy").href = STORE_URL;
+
+  // username profile-URL templates ({u} = username)
+  const SITES = [
+    ["Social","X / Twitter","https://x.com/{u}"],["Social","Instagram","https://instagram.com/{u}"],
+    ["Social","TikTok","https://tiktok.com/@{u}"],["Social","Facebook","https://facebook.com/{u}"],
+    ["Social","Threads","https://threads.net/@{u}"],["Social","Reddit","https://reddit.com/user/{u}"],
+    ["Social","Pinterest","https://pinterest.com/{u}"],["Social","Snapchat","https://snapchat.com/add/{u}"],
+    ["Social","Telegram","https://t.me/{u}"],["Social","Bluesky","https://bsky.app/profile/{u}.bsky.social"],
+    ["Social","Mastodon","https://mastodon.social/@{u}"],["Social","Tumblr","https://{u}.tumblr.com"],
+    ["Dev","GitHub","https://github.com/{u}"],["Dev","GitLab","https://gitlab.com/{u}"],
+    ["Dev","Dev.to","https://dev.to/{u}"],["Dev","Replit","https://replit.com/@{u}"],
+    ["Dev","npm","https://npmjs.com/~{u}"],["Dev","HackerOne","https://hackerone.com/{u}"],
+    ["Dev","Bugcrowd","https://bugcrowd.com/{u}"],["Dev","Codepen","https://codepen.io/{u}"],
+    ["Dev","Kaggle","https://kaggle.com/{u}"],["Dev","StackOverflow","https://stackoverflow.com/users/{u}"],
+    ["Gaming","Steam","https://steamcommunity.com/id/{u}"],["Gaming","Twitch","https://twitch.tv/{u}"],
+    ["Gaming","Speedrun","https://speedrun.com/user/{u}"],["Gaming","Chess.com","https://chess.com/member/{u}"],
+    ["Gaming","Lichess","https://lichess.org/@/{u}"],["Gaming","Roblox","https://roblox.com/user.aspx?username={u}"],
+    ["Creator","YouTube","https://youtube.com/@{u}"],["Creator","Medium","https://medium.com/@{u}"],
+    ["Creator","Substack","https://{u}.substack.com"],["Creator","Patreon","https://patreon.com/{u}"],
+    ["Creator","Gumroad","https://{u}.gumroad.com"],["Creator","Behance","https://behance.net/{u}"],
+    ["Creator","Dribbble","https://dribbble.com/{u}"],["Creator","DeviantArt","https://{u}.deviantart.com"],
+    ["Music","SoundCloud","https://soundcloud.com/{u}"],["Music","Bandcamp","https://{u}.bandcamp.com"],
+    ["Music","Last.fm","https://last.fm/user/{u}"],["Music","Mixcloud","https://mixcloud.com/{u}"],
+    ["Identity","LinkedIn","https://linkedin.com/in/{u}"],["Identity","Linktree","https://linktr.ee/{u}"],
+    ["Identity","About.me","https://about.me/{u}"],["Identity","Keybase","https://keybase.io/{u}"],
+    ["Identity","Gravatar","https://gravatar.com/{u}"],["Identity","Pastebin","https://pastebin.com/u/{u}"],
+    ["Identity","Carrd","https://{u}.carrd.co"],["Identity","Ko-fi","https://ko-fi.com/{u}"],
+    ["Security","TryHackMe","https://tryhackme.com/p/{u}"],["Security","HackTheBox","https://app.hackthebox.com/users/{u}"],
+    ["Security","Exploit-DB","https://exploit-db.com/?author={u}"],["Shopping","Etsy","https://etsy.com/shop/{u}"],
+    ["Shopping","eBay","https://ebay.com/usr/{u}"],["Forum","Quora","https://quora.com/profile/{u}"],
+    ["Forum","Disqus","https://disqus.com/by/{u}"],["Forum","Product Hunt","https://producthunt.com/@{u}"],
+    ["Forum","Goodreads","https://goodreads.com/{u}"],["Photo","Flickr","https://flickr.com/people/{u}"],
+    ["Photo","500px","https://500px.com/p/{u}"],["Photo","VSCO","https://vsco.co/{u}"],
+    ["Money","Cash App","https://cash.app/${u}"],["Money","Venmo","https://venmo.com/{u}"],
+    ["Money","BuyMeACoffee","https://buymeacoffee.com/{u}"],["Dating","OnlyFans","https://onlyfans.com/{u}"]
+  ];
+
+  function g(q){ return "https://www.google.com/search?q=" + encodeURIComponent(q); }
+
+  function render(){
+    const u = document.getElementById("u").value.trim().replace(/^@/,"");
+    if(!u){ document.getElementById("u").focus(); return; }
+    const email = document.getElementById("email").value.trim();
+    const name = document.getElementById("name").value.trim();
+
+    document.getElementById("echo1").textContent = "@" + u;
+    document.getElementById("siteCount").textContent = SITES.length + " sites";
+
+    const grid = document.getElementById("siteGrid"); grid.innerHTML = "";
+    SITES.forEach(([cat,nm,tpl])=>{
+      const a = document.createElement("a");
+      a.className = "site"; a.target="_blank"; a.rel="noopener";
+      a.href = tpl.replace("{u}", encodeURIComponent(u));
+      a.innerHTML = '<span><span class="cat">'+cat+'</span>'+nm+'</span><span class="arr">↗</span>';
+      grid.appendChild(a);
+    });
+
+    const dorks = [
+      ['"'+u+'" on paste/leak sites', g('"'+u+'" (site:pastebin.com OR site:ghostbin.com OR site:throwbin.io)')],
+      ['"'+u+'" in leaked databases / breaches', g('"'+u+'" (breach OR leak OR dump OR password)')],
+      ['"'+u+'" in public documents', g('"'+u+'" (filetype:pdf OR filetype:xlsx OR filetype:doc OR filetype:csv)')],
+      ['"'+u+'" across the wider web', g('"'+u+'" -site:'+ (u.includes(".")?u:"twitter.com"))],
+      ['Reverse-image your profile pic', 'https://images.google.com/'],
+    ];
+    if(email){
+      dorks.push(['"'+email+'" anywhere online', g('"'+email+'"')]);
+      dorks.push(['"'+email+'" on paste/leak sites', g('"'+email+'" (site:pastebin.com OR breach OR leak)')]);
+      dorks.push(['Check this email in breaches (Have I Been Pwned)', 'https://haveibeenpwned.com/']);
+    }
+    if(name){
+      dorks.push(['"'+name+'" + phone / address', g('"'+name+'" (phone OR address OR "lives in")')]);
+      dorks.push(['"'+name+'" on people-search / broker sites', g('"'+name+'" (site:spokeo.com OR site:whitepages.com OR site:beenverified.com)')]);
+    }
+    const dl = document.getElementById("dorkList"); dl.innerHTML = "";
+    dorks.forEach(([label,href])=>{
+      const a=document.createElement("a"); a.className="dork"; a.target="_blank"; a.rel="noopener"; a.href=href;
+      a.innerHTML = label + ' <span class="q">↗ open search</span>';
+      dl.appendChild(a);
+    });
+
+    document.getElementById("results").style.display = "block";
+    document.getElementById("results").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  document.getElementById("go").addEventListener("click", render);
+  document.getElementById("u").addEventListener("keydown", e=>{ if(e.key==="Enter") render(); });
+
+  // optional email capture
+  document.getElementById("emailForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const msg = document.getElementById("emailMsg");
+    const val = document.getElementById("leadEmail").value.trim();
+    if(!val || val.indexOf("@")<0){ msg.textContent="Enter a valid email."; return; }
+    if(!FORMSPREE_ENDPOINT){ msg.innerHTML='Thanks! (Owner: wire up <b>FORMSPREE_ENDPOINT</b> in the code to actually collect these.)'; return; }
+    fetch(FORMSPREE_ENDPOINT,{method:"POST",headers:{"Accept":"application/json"},body:new FormData(e.target)})
+      .then(()=>{ msg.textContent="✓ Sent — check your inbox."; e.target.reset(); })
+      .catch(()=>{ msg.textContent="Something went wrong — try again."; });
+  });
+</script>
+</body>
+</html>
