@@ -158,12 +158,8 @@
       </div>
       <div class="price">Both get you to the same place: see what's exposed, then shut it down. · <a id="discord" href="https://discord.gg/2F9nGQ5Uy" target="_blank" rel="noopener" style="color:var(--cy);text-decoration:none">Join the free Discord</a></div>
       <div class="email">
-        <p style="color:var(--dim);font-size:13px;margin:18px 0 0">Or get the free 12-point self-audit checklist by email:</p>
-        <form id="emailForm">
-          <input type="text" id="leadEmail" placeholder="you@email.com" />
-          <button type="submit">Send it</button>
-        </form>
-        <div class="hint" id="emailMsg" style="text-align:center"></div>
+        <p style="color:var(--dim);font-size:13px;margin:18px 0 8px">Not ready to buy? Grab the free 12-point self-audit checklist:</p>
+        <a href="self-audit-checklist.pdf" download style="display:inline-block;background:var(--cy);color:#04121b;font-weight:800;text-decoration:none;border-radius:10px;padding:13px 26px">&#8595; Download the free checklist (PDF)</a>
       </div>
     </div>
   </div>
@@ -281,17 +277,7 @@
   document.getElementById("go").addEventListener("click", render);
   document.getElementById("u").addEventListener("keydown", e=>{ if(e.key==="Enter") render(); });
 
-  // optional email capture
-  document.getElementById("emailForm").addEventListener("submit", function(e){
-    e.preventDefault();
-    const msg = document.getElementById("emailMsg");
-    const val = document.getElementById("leadEmail").value.trim();
-    if(!val || val.indexOf("@")<0){ msg.textContent="Enter a valid email."; return; }
-    if(!FORMSPREE_ENDPOINT){ msg.innerHTML='Thanks! (Owner: wire up <b>FORMSPREE_ENDPOINT</b> in the code to actually collect these.)'; return; }
-    fetch(FORMSPREE_ENDPOINT,{method:"POST",headers:{"Accept":"application/json"},body:new FormData(e.target)})
-      .then(()=>{ msg.textContent="✓ Sent — check your inbox."; e.target.reset(); })
-      .catch(()=>{ msg.textContent="Something went wrong — try again."; });
-  });
+  // free checklist is now a direct PDF download (self-audit-checklist.pdf) — no capture needed
 </script>
 </body>
 </html>
